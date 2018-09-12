@@ -93,7 +93,7 @@ for(CNV_set in all_CNV_sets) {
 
 # Folder for results
 folder <- "local_random_intervals"
-for(CNV_set in all_CNV_sets[c(4)]) {
+for(CNV_set in all_CNV_sets) {
   
   files <- list.files("local_random_intervals/output/")
   files <- files[grep(CNV_set, files)]
@@ -150,73 +150,6 @@ for(CNV_set in all_CNV_sets[c(4)]) {
                                                   ran = ran_any)
   
   
-  save(results_within, results_any, 
-       file = paste0("enrichment_general_within_any/", folder, "/results_within_and_any_", 
-                     CNV_set, "_",
-                     total_permuts, "permuts.RData"))
-  
-}
-
-
-
-# Folder for results splitting CNVs
-folder <- "global_split_cnvs"
-for(CNV_set in all_CNV_sets[c(1,3,4,5,2)]) {
-  ## RANDOM STARTS
-  chromosomes <- read.table(paste0("global_random_intervals/output/cutting_CNVs/global_random_intervals_random_chrs_", CNV_set, "_", total_permuts, ".txt"),
-                            stringsAsFactors = F, header = F)
-  print("chromosomes loaded")
-  
-  starts <- read.table(paste0("global_random_intervals/output/cutting_CNVs/global_random_intervals_random_starts_", CNV_set, "_", total_permuts, ".txt"),
-                       stringsAsFactors = F, header = F)
-  print("starts loaded")
-  
-  widths <- read.table(paste0("global_random_intervals/output/cutting_CNVs/global_random_intervals_random_widths_", CNV_set, "_", total_permuts, ".txt"),
-                       stringsAsFactors = F, header = F)
-  print("widths loaded")
-  
-  # CNV_ranges
-  load(paste0("global_random_intervals/output/cutting_CNVs/global_random_intervals_original_", CNV_set, "_GRanges.RData"))
-  
-  print("CNV_ranges loaded")
-  
-  obs_within <- sum(overlapsAny(CNV_ranges, intronic_RANGES, type = "within")) 
-  obs_any    <- sum(overlapsAny(CNV_ranges, intronic_RANGES, type = "any"))
-  
-  # Random values
-  ran_within <- c()
-  ran_any    <- c()
-  while(ncol(chromosomes) > 0) {
-    random_cnvs <- GRanges(seqnames = chromosomes[, 1],
-                           ranges   = IRanges(start = starts[, 1],
-                                              width = widths[, 1]))
-    
-    
-    ran_within <- c(ran_within, sum(overlapsAny(random_cnvs, intronic_RANGES, type = "within")))
-    ran_any    <- c(ran_any   , sum(overlapsAny(random_cnvs, intronic_RANGES, type = "any")))
-    
-    chromosomes <- chromosomes[, -1]
-    starts      <- starts[, -1]
-    widths      <- widths[, -1]
-    
-    if(class(starts) == "integer") {
-      chromosomes <- matrix(chromosomes, ncol = 1)
-      starts      <- matrix(starts, ncol = 1)
-      widths      <- matrix(widths, ncol = 1)
-    }
-    if(ncol(chromosomes)%%100 == 0) print(ncol(chromosomes))
-  }
-  
-  
-  
-  # Calculating p.value as it would be calculated using permTest from regioneR
-  results_within <- calculate_pval_randomizations(obs = obs_within,
-                                                  ran = ran_within)
-  results_any    <- calculate_pval_randomizations(obs = obs_any,
-                                                  ran = ran_any)
-  
-  
-  print(str(results_within))
   save(results_within, results_any, 
        file = paste0("enrichment_general_within_any/", folder, "/results_within_and_any_", 
                      CNV_set, "_",

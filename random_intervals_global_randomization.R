@@ -8,8 +8,10 @@
 # total_permuts = as.integer(args[4])
 # size_block    = as.integer(args[5])
 
-input_dir     <- "/home/mrigau/_projects/A_FINAL_VERSION_CNVs/Revision_plos_genetics/extension_randomizations/global_randomization/"
-output_dir    <- "/home/mrigau/_projects/A_FINAL_VERSION_CNVs/Revision_plos_genetics/extension_randomizations/global_randomization/output/"
+# Set working directory to Background-models
+
+input_dir     <- "global_randomization/"
+output_dir    <- "global_randomization/output/"
 total_permuts <- 10000
 
 library( "regioneR" )
@@ -17,8 +19,8 @@ library( "BSgenome.Hsapiens.UCSC.hg19.masked" )
 library( "gtools" )
 library( "seqbias")
 
-
-objects <- load("/home/mrigau/_projects/A_FINAL_VERSION_CNVs/Revision_plos_genetics/data_for_randomizations_revision2.RData")
+# Load RData (deletion maps, intronic regions coordinates, gene coordinates, gene Ages)
+load("deletions_introns_genes_ages.RData")
 
 # # Datasets
 all_CNV_sets <- c("Phase3_DELS",

@@ -3,11 +3,13 @@ library( "BSgenome.Hsapiens.UCSC.hg19.masked" )
 library( "seqbias" )
 
 
-setwd( "/home/mrigau/_projects/A_FINAL_VERSION_CNVs/Revision_plos_genetics/" )
-objects <- load("data_for_randomizations_revision2.RData")
+# Load RData (deletion maps, intronic regions coordinates, gene coordinates, gene Ages)
+load("deletions_introns_genes_ages.RData")
 
-input_dir     <- "/home/mrigau/_projects/A_FINAL_VERSION_CNVs/Revision_plos_genetics/extension_randomizations/local_randomization/"
-output_dir    <- "/home/mrigau/_projects/A_FINAL_VERSION_CNVs/Revision_plos_genetics/extension_randomizations/local_randomization/output/"
+# Set working directory to Background-models
+
+input_dir     <- "local_randomization/"
+output_dir    <- "local_randomization/output/"
 total_permuts <- 10000
 
 # Datasets

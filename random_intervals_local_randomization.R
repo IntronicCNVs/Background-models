@@ -2,15 +2,19 @@ library( "regioneR" )
 library( "BSgenome.Hsapiens.UCSC.hg19.masked" )
 library( "seqbias" )
 
+# Set working directory to Background-models
+setwd("Background-models/")
+if (!file.exists("local_random_intervals"))  dir.create(file.path(".", "local_random_intervals"))
+if (!file.exists("local_random_intervals/output"))  dir.create(file.path("local_random_intervals", "output"))
 
 # Load RData (deletion maps, intronic regions coordinates, gene coordinates, gene Ages)
 load("deletions_introns_genes_ages.RData")
 
 # Set working directory to Background-models
 
-input_dir     <- "local_randomization/"
-output_dir    <- "local_randomization/output/"
-total_permuts <- 10000
+input_dir     <- "local_random_intervals/"
+output_dir    <- "local_random_intervals/output/"
+total_permuts <- 10
 
 # Datasets
 all_CNV_sets <- c("Phase3_DELS",
@@ -146,7 +150,7 @@ for(map_num in c(1,3,4,5,2)) {
       }
       
       write.table(all_random_starts, quote = F, row.names = F, col.names = F,
-                  file = paste0(output_dir, "randomintervals/local_random_intervals_random_starts_", CNV_set, 
+                  file = paste0(output_dir, "local_random_intervals_random_starts_", CNV_set, 
                                 "_subset_segment", segment_num, "_",
                                 total_permuts, "_permuts.txt"))
       rm(all_random_starts)  
@@ -159,7 +163,7 @@ for(map_num in c(1,3,4,5,2)) {
   }
   
   save(whole_granges,
-       file = paste0(output_dir, "randomintervals/local_random_intervals_original_", CNV_set, "_GRanges.RData"))
+       file = paste0(output_dir, "local_random_intervals_original_", CNV_set, "_GRanges.RData"))
                      
   print(CNV_set)
 }

@@ -9,9 +9,12 @@
 # size_block    = as.integer(args[5])
 
 # Set working directory to Background-models
+setwd("Background-models/")
+if (!file.exists("global_random_intervals")) dir.create(file.path(".", "global_random_intervals"))
+if (!file.exists("global_random_intervals/output"))  dir.create(file.path("global_random_intervals", "output"))
 
-input_dir     <- "global_randomization/"
-output_dir    <- "global_randomization/output/"
+input_dir     <- "global_random_intervals/"
+output_dir    <- "global_random_intervals/output/"
 total_permuts <- 10000
 
 library( "regioneR" )
@@ -19,6 +22,8 @@ library( "BSgenome.Hsapiens.UCSC.hg19.masked" )
 library( "gtools" )
 library( "seqbias")
 
+# Set working directory to Background-models
+setwd(".")
 # Load RData (deletion maps, intronic regions coordinates, gene coordinates, gene Ages)
 load("deletions_introns_genes_ages.RData")
 
@@ -116,17 +121,17 @@ for(map_num in c(1,3,4,5,2)) {
   }
   
   write.table(all_random_starts, quote = F, row.names = F, col.names = F,
-       file = paste0(output_dir, "randomintervals/global_random_intervals_random_starts_", CNV_set, "_",
+       file = paste0(output_dir, "global_random_intervals_random_starts_", CNV_set, "_",
                      total_permuts, ".txt"))
   rm(all_random_starts)  
 
   write.table(all_random_chrs, quote = F, row.names = F, col.names = F,
-              file = paste0(output_dir, "randomintervals/global_random_intervals_random_chrs_", CNV_set, "_",
+              file = paste0(output_dir, "global_random_intervals_random_chrs_", CNV_set, "_",
                             total_permuts, ".txt"))
   rm(all_random_chrs)
   
   save(CNV_ranges, 
-       file = paste0(output_dir, "randomintervals/global_random_intervals_original_", CNV_set, "_GRanges.RData"))
+       file = paste0(output_dir, "global_random_intervals_original_", CNV_set, "_GRanges.RData"))
   
   
   print(CNV_set)

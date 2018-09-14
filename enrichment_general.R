@@ -1,3 +1,8 @@
+# Here we calculate the observed and expected number of deletions overlapping with introns 
+# Two types of overlap with intron are counted: CNVs completely falling within an intron and  CNVs overlapping  an intron
+# Overlap type "within": purely intronic introns
+# Overlap type "any": any kind of overlap with introns
+
 library( "regioneR" )
 library( "BSgenome.Hsapiens.UCSC.hg19.masked" )
 library( "seqbias" )
@@ -5,9 +10,9 @@ library( "seqbias" )
 # #### Data loading and preparation
 # Set working directory to Background-models
 setwd("Background-models/")
-if (!file.exists("enrichment_general_within_any")) dir.create(file.path(".", "enrichment_general_within_any"))
-if (!file.exists("enrichment_general_within_any/global_random_intervals")) dir.create(file.path("enrichment_general_within_any", "global_random_intervals"))
-if (!file.exists("enrichment_general_within_any/local_random_intervals"))  dir.create(file.path("enrichment_general_within_any", "local_random_intervals"))
+if (!file.exists("enrichment_general")) dir.create(file.path(".", "enrichment_general"))
+if (!file.exists("enrichment_general/global_random_intervals")) dir.create(file.path("enrichment_general", "global_random_intervals"))
+if (!file.exists("enrichment_general/local_random_intervals"))  dir.create(file.path("enrichment_general", "local_random_intervals"))
 
 objects <- load("deletions_introns_genes_ages.RData")
 seqlevelsStyle(intronic_RANGES) <- "UCSC"
@@ -16,7 +21,7 @@ source("calculate_pvalue_randomizations.R")
 
 ### Number of permutations
 
-total_permuts <- 10000
+total_permuts <- 100 # 10000 in paper
 
 # Datasets
 all_CNV_sets <- c("Phase3_DELS",
@@ -31,7 +36,8 @@ all_CNV_sets <- c("Phase3_DELS",
 # Folder for results
 folder <- "global_random_intervals"
 for(CNV_set in all_CNV_sets) {
-  ## RANDOM STARTS
+  
+  ## Loading RANDOM STARTS and CHROMOSOMES
   chromosomes <- read.table(paste0("global_random_intervals/output/global_random_intervals_random_chrs_", CNV_set, "_", total_permuts, ".txt"),
                             stringsAsFactors = F, header = F)
   print("chromosomes loaded")
@@ -45,8 +51,9 @@ for(CNV_set in all_CNV_sets) {
   
   print("CNV_ranges loaded")
   
-  obs_within <- sum(overlapsAny(CNV_ranges, intronic_RANGES, type = "within")) 
-  obs_any    <- sum(overlapsAny(CNV_ranges, intronic_RANGES, type = "any"))
+  # Count overlaps with introns
+  obs_within <- sum(overlapsAny(CNV_ranges, intronic_RANGES, type = "within")) # purely intronic deletions
+  obs_any    <- sum(overlapsAny(CNV_ranges, intronic_RANGES, type = "any"))    # intron overlapping deletions
   
   # Random values
   ran_within <- c()
@@ -80,7 +87,7 @@ for(CNV_set in all_CNV_sets) {
   
  
   save(results_within, results_any, 
-       file = paste0("enrichment_general_within_any/", folder, "/results_within_and_any_", 
+       file = paste0("enrichment_general/", folder, "/results_within_and_any_", 
                      CNV_set, "_",
                      total_permuts, "permuts.RData"))
 
@@ -102,6 +109,7 @@ for(CNV_set in all_CNV_sets) {
   all_starts <- c()
   for(segment_num in 1:278) {
     
+    # Check if file with random starts exists (if there weren't cnvs in segment the file wasn't created)
     if(sum(grepl(paste0("_segment", segment_num, "_"), files)) == 1) {
       all_starts <-rbind(all_starts,
                          read.table(paste0("local_random_intervals/output/local_random_intervals_random_starts_", CNV_set, 
@@ -109,13 +117,14 @@ for(CNV_set in all_CNV_sets) {
                                            total_permuts, "_permuts.txt"),
                                     stringsAsFactors = F, header = F))
     }
-    print(segment_num)
+    if(segment_num%%10 == 0) print(paste("segment", segment_num, "of", 278)) # 278 is the number of 10Mb segments
   }
   
   # CNV_ranges
   load(paste0("local_random_intervals/output/local_random_intervals_original_", CNV_set, "_GRanges.RData"))
   CNV_ranges <- whole_granges
   rm(whole_granges)
+  
   
   obs_within <- sum(overlapsAny(CNV_ranges, intronic_RANGES, type = "within")) 
   obs_any    <- sum(overlapsAny(CNV_ranges, intronic_RANGES, type = "any"))
@@ -151,7 +160,7 @@ for(CNV_set in all_CNV_sets) {
   
   
   save(results_within, results_any, 
-       file = paste0("enrichment_general_within_any/", folder, "/results_within_and_any_", 
+       file = paste0("enrichment_general/", folder, "/results_within_and_any_", 
                      CNV_set, "_",
                      total_permuts, "permuts.RData"))
   
@@ -169,11 +178,11 @@ col_and_name <- list(randomization_name =  c(local_random_intervals = "Local ran
 
 results_tables <- list()
 
-for(randomization_type in c("local_random_intervals",
-                            "global_random_intervals")) { 
+for(randomization_type in c("global_random_intervals",
+                            "local_random_intervals")) { 
   
-  # pdf(file = paste0("enrichment_general_within_any/", randomization_type, "/", randomization_type,
-  #            "_within_vs_any_general_",total_permuts, "_permuts.pdf"), width = 17, height = 9)
+  pdf(file = paste0("enrichment_general/", randomization_type, "/", randomization_type,
+             "_within_vs_any_general_",total_permuts, "_permuts.pdf"), width = 17, height = 9)
   titulo = "Purely intronic vs Intron intersecting deletions"
   par(mfrow = c(1,2))
   
@@ -184,7 +193,7 @@ for(randomization_type in c("local_random_intervals",
     alternatives <- c()
     percent_more_or_less <- c()
     for(CNV_set in all_CNV_sets[c(1,3,4,5,2)]) {
-      load(paste0("enrichment_general_within_any/",
+      load(paste0("enrichment_general/",
                   randomization_type, 
                   "/results_within_and_any_", CNV_set, "_", total_permuts, "permuts.RData"))
 
@@ -253,7 +262,7 @@ for(randomization_type in c("local_random_intervals",
         max_pval <- 0.0005
       }
       
-      # positive and significant FCs (add star)
+      # positive and significant FCs (add stars)
       if(sum(pvals >= min_pval & pvals < max_pval & alternatives == "greater") > 0) {
         trues <- (pvals >= min_pval & pvals < max_pval & alternatives == "greater")
         yplus <- (ratios+ mads)[trues] + 0.02
@@ -267,7 +276,7 @@ for(randomization_type in c("local_random_intervals",
       }
       
       
-      # negative and significant FCs(add star)
+      # negative and significant FCs(add stars)
       if(sum(pvals >= min_pval & pvals < max_pval & alternatives == "less") > 0) {
         trues <- (pvals >= min_pval & pvals < max_pval & alternatives == "less")
         yminus <- (ratios - mads)[trues] - 0.02
@@ -285,6 +294,6 @@ for(randomization_type in c("local_random_intervals",
                                                                   p.val = pvals)
   }
   
-  # dev.off()
+  dev.off()
 }
 

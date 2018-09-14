@@ -1,3 +1,6 @@
+# Local background model:
+# All CNVs are relocated within 10Mb windows. This script generation of matrices with all random starts positions for all CNVs,  per segment
+
 library( "regioneR" )
 library( "BSgenome.Hsapiens.UCSC.hg19.masked" )
 library( "seqbias" )
@@ -14,7 +17,7 @@ load("deletions_introns_genes_ages.RData")
 
 input_dir     <- "local_random_intervals/"
 output_dir    <- "local_random_intervals/output/"
-total_permuts <- 10
+total_permuts <- 100 # 10000 in paper
 
 # Datasets
 all_CNV_sets <- c("Phase3_DELS",
@@ -41,14 +44,17 @@ for(CNV_set in all_CNV_sets) {
   seqlevelsStyle(CNV_ranges)      <- "UCSC"
   # Only CNVs in autosomes
   CNV_ranges <- filterChromosomes(CNV_ranges, chr.type = "autosomal")
+  # Not CNVs that overlap with low-mappability regions
   CNV_ranges <- CNV_ranges[!overlapsAny(CNV_ranges, human.mask.autosomal)]
   assign(CNV_set, CNV_ranges)
 }
 
 
+## As in Mu et al. 2011, we divide the genome in  windows of 10Mb (at least)
 names(human.autosomal) <- seqnames(human.autosomal)
 total_windows_per_chr  <- floor(end(human.autosomal)/10000000)
 names(total_windows_per_chr) <- as.character(seqnames(human.autosomal))
+
 
 segmented_autosomes <- c()
 for(chr in as.character(seqnames(human.autosomal))) {
@@ -73,43 +79,44 @@ CNVs.with.center.in.segment <- function(whole_CNV_map, segment.coordinates, mask
   start(centre.ranges) <- centre.coord
   end(centre.ranges)   <- centre.coord
 
-  whole_CNV_map$cnv_num <- 1:length(whole_CNV_map)
-  whole_CNV_map$centre <- centre.coord
-  
+  # Select CNVs with center in the segment
   cnvs.in.segment <- whole_CNV_map[overlapsAny(centre.ranges, segment.coordinates)]
-  cnvs.in.segment <- cnvs.in.segment[!overlapsAny(cnvs.in.segment, mask)]
-  
+ 
   cnvs.in.segment
 }
 
 
 
 ## LOCAL RANDOMIZATION
-for(map_num in c(1,3,4,5,2)) {
+for(map_num in 1:5) {
   CNV_set <- all_CNV_sets[map_num]
   whole_CNV_map <- get(CNV_set)
   whole_granges <- GRanges()
   
-  for(segment_num in 1:278) {
+  for(segment_num in 1:length(segmented_autosomes)) {
     
     segment.coordinates  = segmented_autosomes[segment_num]
+    # Subset of cnvs in the segment
     subset_cnvs <- CNVs.with.center.in.segment(whole_CNV_map,
                                                segment.coordinates = segment.coordinates,
                                                mask = human.mask.autosomal)
   
-    if(length(subset_cnvs) > 0) {
+    if(length(subset_cnvs) > 0) { 
       # Regions without mask
       mask_in_segment <- coverage(append(append(segment.coordinates,
                                                 segment.coordinates),
                                          reduce(human.mask.autosomal)))
+      # If there is mask coverage will be 3 or 1
       
       coverage_Rle <- mask_in_segment[[as.character(seqnames(segment.coordinates))]]
+      # Transform to GRanges
       cov.granges <- GRanges(seqnames = as.character(seqnames(segment.coordinates)),
                              ranges= ranges(coverage_Rle),
                              coverage = coverage_Rle@values)
-      unmasked_genome <- cov.granges[cov.granges$coverage == 2] # If there is mask coverage will be 3 or 1
+      # Select segment parts without mask
+      unmasked_genome <- cov.granges[cov.granges$coverage == 2] 
       
-      # adapt granges for random.intervals  
+      # adapt granges for random.intervals (each range will need a different seqname, and after it will need correction)
       
       unmasked_genome_for_randomization <- unmasked_genome
       
@@ -125,7 +132,7 @@ for(map_num in c(1,3,4,5,2)) {
       all_random_starts <- c()
       
       for(i in 1:total_permuts) {
-        # For some reason, random.intervals doesn't work if  length is 1
+        # For some reason, random.intervals doesn't work if  length is 1, so in such cases we duplicate and remove later
         is_length_1 <- length(subset_cnvs) == 1
         if(is_length_1) {
           subset_cnvs <- append(subset_cnvs, subset_cnvs)
@@ -136,6 +143,9 @@ for(map_num in c(1,3,4,5,2)) {
                                         n=length(subset_cnvs),
                                         ms=width(subset_cnvs)-1)
         
+        # This function has crated a randomized set giving the coordinates within the range. For example,
+        # a CNV starting in position 2500 from  a range that starts with 2000 will be given as start  position 500.
+        # Needs to be fixed. And also recover original seqnames, in this case will be the same for all
         random_int <- GRanges(seqnames = chr_in_unmasked_genome,
                               ranges = IRanges(start = start(random_int0) + start(unmasked_genome_for_randomization[seqnames(random_int0)]),
                                                end   = end(random_int0) + start(unmasked_genome_for_randomization[seqnames(random_int0)])))
@@ -149,13 +159,14 @@ for(map_num in c(1,3,4,5,2)) {
         if(i%%1000 == 0) print(i)
       }
       
+      # We save all random starts (chromosomes will be maintained in the randomization
       write.table(all_random_starts, quote = F, row.names = F, col.names = F,
                   file = paste0(output_dir, "local_random_intervals_random_starts_", CNV_set, 
                                 "_subset_segment", segment_num, "_",
                                 total_permuts, "_permuts.txt"))
       rm(all_random_starts)  
       
-      print(segment_num)
+      if(segment_num%%10 == 0) print(paste("segment", segment_num, "of", length(segmented_autosomes)))
     }
  
     whole_granges <- append(whole_granges, subset_cnvs)

@@ -23,10 +23,8 @@ for(folder_name in c("enrichment_by_age", "enrichment_by_size")) {
 
 
 
-
-
 # #### Data loading and preparation
-objects <- load("deletions_introns_genes_ages.RData")
+load("deletions_introns_genes_ages.RData")
 seqlevelsStyle(intronic_RANGES) <- "UCSC"
 seqlevelsStyle(protein_coding_RANGES)      <- "UCSC"
 source("calculate_pvalue_randomizations.R")
@@ -191,9 +189,9 @@ print(CNV_set)
   
 }
 
-print("End of global enrichment by age and size")
 
-## LOCAL random intervals
+
+## LOCAL background model
 
 # Folder for results
 folder <- "local_random_intervals"
@@ -295,5 +293,150 @@ for(CNV_set in all_CNV_sets) {
 }
 
 
+## PLOT RESULTS
+### PLOTS
+col_and_name <- list(randomization_name =  c(local_random_intervals = "Local randomization",
+                                             global_random_intervals = "Global randomization"),
+                     randomization_color = c(local_random_intervals = "royalblue",
+                                             global_random_intervals = "gold1"))
 
+overlap_type_names <- c(intronic_within = "Purely intronic deletions",
+                        intronic_any    = "Intron-intersecting deletions") # Can be completely or partially overlapping  with introns
+                        
+
+
+
+### Figures (boxplot)
+results_tables <- list()
+for(age_or_size in c("enrichment_by_age", 
+                     "enrichment_by_size")) {
+  for(enrichment_in in c("num_genes",  
+                         "num_cnvs", 
+                         "num_introns")) {
+    for(randomization_type in c("local_random_intervals",
+                                "global_random_intervals")) {
+      for(overlap_type in c("intronic_within" , "intronic_any")) {
+        
+        # pdf(paste0(age_or_size, "/", 
+        #            randomization_type, "/", 
+        #            randomization_type, "_enrichment_in_", enrichment_in,
+        #            "_", overlap_type,
+        #            ".pdf"), width = 10, height = 5.5)
+        par(mfrow = c(1,3), oma = c(1,0.5,0,0), mar = c(8,4,4,1))
+        
+        for(CNV_set in all_CNV_sets[c(1,3,4)]) {
+          # LOAD RESULTS
+          print(load(paste0(age_or_size, "/", randomization_type, "/within_", CNV_set, "_",  total_permuts, "permuts.RData")))
+          
+          if(age_or_size == "enrichment_by_age")  results <- results_ages
+          if(age_or_size == "enrichment_by_size") results <- results_sizes
+          
+          # all observed results
+          all_obs <- unlist(lapply(results, function(x) x[[enrichment_in]][["observed"]]))
+          # all random results
+          all_ran <- do.call("cbind", lapply(results, function(x) x[[enrichment_in]][["permuted"]]))
+          alternatives <- unlist(lapply(results, function(x) x[[enrichment_in]][["alternative"]]))
+          all_pvals <- unlist(lapply(results, function(x) x[[enrichment_in]][["pval"]]))
+          
+          # % of deletions more or less than expected
+          percent_more_or_less <- (all_obs/apply(all_ran, 2, median)-1)*100
+          
+          
+          color <- c(Abyzov_RANGES = "#FF9400",
+                     Handsaker_DELS = "#93184E",
+                     Zarrei_DELS = "#66A1D2",
+                     Sud15_DELS = "#116A66",
+                     Phase3_DELS = "#043C6B")[CNV_set]
+          
+          # Calculate fold changes
+          FCs <- list()
+          for(age in names(all_obs)) {
+            FCs[[age]] <-  log2(all_obs[age]/all_ran[,age])
+          }
+          
+          bp <- boxplot(FCs, 
+                        outline = F,  
+                        main = paste(CNV_set, " - ", col_and_name$randomization_name[randomization_type],
+                                     "\n", overlap_type_names[overlap_type]), 
+                        ylim = c(-3.3,3.3),
+                        lwd = 0.7,
+                        # border = border,
+                        ylab= list(num_genes   = "log2(obs/exp number of genes)", 
+                                   num_cnvs    = "log2(obs/exp number of deletions)",
+                                   num_introns = "log2(obs/exp number of introns)")[[enrichment_in]],
+                        col = color, names = NA,
+                        cex.main = 1.35)
+          abline(h = 0)
+          
+          # x labels
+          if(age_or_size == "enrichment_by_age") {
+            text(x = 1:length(FCs), y = ylim[1]-0.1*(dist(ylim)), 
+                 labels = names(results),
+                 srt = 45,xpd = TRUE, adj = 1, cex = 0.85)
+            mtext("Ancient --> Recent", side = 1, line = 5.5, xpd = T, cex = 0.8)
+          }
+          if(age_or_size == "enrichment_by_size") {
+            text(x = 1:length(FCs), y = ylim[1]-0.1*(dist(ylim)), 
+                 labels = names(results),
+                 srt = 45,xpd = TRUE, adj = 1, cex = 0.85)
+            mtext("Intron size (bp)", side = 1, line = 7, xpd = T, cex = 0.8)
+           
+          }
+          
+          # Significance (number of asterisks)
+          for(num_stars in c(1:3)) {
+            if(num_stars == 1) {
+              min_pval <- 0.005
+              max_pval <- 0.05
+            }
+            if(num_stars == 2) {
+              min_pval <- 0.0005
+              max_pval <- 0.005
+            }
+            if(num_stars == 3) {
+              min_pval <- 0
+              max_pval <- 0.0005
+            }
+            # positive and significant FCs (add star)
+            if(sum(all_pvals >= min_pval & all_pvals < max_pval & alternatives == "greater") > 0) {
+              trues <- all_pvals >= min_pval & all_pvals < max_pval & alternatives == "greater"
+              yplus <- (bp$stats[5,])[trues] + 0.04
+              text(x = (1:16)[trues], 
+                   y = yplus,
+                   rep(paste0(rep("*", num_stars), collapse = ""),sum(trues)), 
+                   xpd = T,
+                   srt = 90,
+                   adj = 0,
+                   # pos = 3,
+                   cex = 1.2, col = "red", xpd = T) # indianred1
+            }
+            
+            
+            # negative and significant FCs(add star)
+            if(sum(all_pvals >= min_pval & all_pvals < max_pval & alternatives == "less") > 0) {
+              trues <- all_pvals >= min_pval & all_pvals < max_pval & alternatives == "less"
+              yminus <- (bp$stats[1,])[trues] - 0.04
+              text(x = (1:16)[trues], 
+                   y = yminus,
+                   rep(paste0(rep("*", num_stars), collapse = ""),sum(trues)), 
+                   xpd = T,
+                   srt = 90,
+                   adj = 1,
+                   # pos = 3,
+                   cex = 1.2, col = "red", xpd = T) # indianred1
+            }
+          }
+          
+          
+          results_tables[[randomization_type]][[enrichment_in]][[age_or_size]][[CNV_set]][[overlap_type]] <- rbind(ratio = unlist(lapply(FCs, median)),
+                                                                                                                   percent_difference_from_expected = percent_more_or_less,
+                                                                                                                   p.val = all_pvals)
+      }
+      
+      
+      # dev.off()
+    }
+  }
+}
+}
 

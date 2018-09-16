@@ -1,6 +1,6 @@
 # Background-models
 
-Random_intervals_global_randomization.R
+Random_intervals_global_randomization.R\n
 This script generates random sets of CNVs by relocating them all over the genome except for low-mappability regions.
 The random sets are stored as matrices with the chromosomes and the start coordinates (CNV size will be the same as in the original map). 
 

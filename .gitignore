@@ -4,3 +4,5 @@ global_random_intervals
 local_random_intervals
 enrichment_by_age_size
 enrichment_coding
+enrichment_by_age
+enrichment_by_size

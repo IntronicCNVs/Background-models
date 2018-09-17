@@ -14,7 +14,7 @@ The random sets are stored as matrices with the start coordinates (chromosomes a
 
 enrichment_general.R
 
-Here the observed number of CNVs completely within introns (or all overlapping introns) is counted for the real CNV maps and the random maps. Then, the enrichment is calculated using the function in calculate_pvalue_randomizations.R 
+Here the observed number of intronic CNVs is counted for the real CNV maps and for the random maps. Then, the enrichment is calculated using the function in calculate_pvalue_randomizations.R 
 
 
 enrichment_by_intron_size_or_age.R	
@@ -22,3 +22,4 @@ enrichment_by_intron_size_or_age.R
 The number of CNVs overlapping introns is calculated by groups of introns classified by evolutionary ages or by sizes. A P-value is calculate for each subgroup of introns. 
 
 deletions_introns_genes_ages.RData	
+RData object containing coordinates of deletions, intronic ranges, exons ranges and gene evolutionary ages, necessary for running all analyses.

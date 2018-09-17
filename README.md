@@ -1,4 +1,10 @@
+
+
 # Background-models
+
+This repository contains the scripts and data that were used to generate the results presented in Rigau et al. (Intronic CNVs cause gene expression variation in human population, https://doi.org/10.1101/171165). 
+
+We include code to generate different types of randomised sets of CNVs, that will be used in subsequent scripts to assess the relationship between CNVs and different genomic features, focusing on introns. These are the descriptions of the different R scripst and of data files: 
 
 Random_intervals_global_randomization.R
 
@@ -22,4 +28,5 @@ enrichment_by_intron_size_or_age.R
 The number of CNVs overlapping introns is calculated by groups of introns classified by evolutionary ages or by sizes. A P-value is calculate for each subgroup of introns. 
 
 deletions_introns_genes_ages.RData	
+
 RData object containing coordinates of deletions, intronic ranges, exons ranges and gene evolutionary ages, necessary for running all analyses.

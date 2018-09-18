@@ -27,6 +27,21 @@ enrichment_by_intron_size_or_age.R
 
 The number of CNVs overlapping introns is calculated by groups of introns classified by: (1) evolutionary ages or (2 sizes. A P-value is calculate for each subgroup of introns. 
 
+
+enrichment_coding_general.R
+
+Here the observed number of CNVs that overlaps with exons is counted in the real CNV maps and in the randomized maps. Then, the enrichment is calculated using the function in calculate_pvalue_randomizations.R 
+
+
+enrichment_coding_by_age.R
+
+Here the observed number of CNVs that overlaps with exons (and the number of genes affected by exon-overlapping CNVs) is counted in the real CNV maps and in the randomized maps, separating by gene evolutionary ages. Then, the enrichment is calculated using the function in calculate_pvalue_randomizations.R 
+
+
 deletions_introns_genes_ages.RData	
 
 RData object containing coordinates of deletions, intronic ranges, exons ranges and gene evolutionary ages, necessary for running all analyses.
+
+Table_S7_list_of_CNVs.xls 
+
+Supplementary table S7 from the article, containing all CNVs used taken into account in the study and their impact on genes. 

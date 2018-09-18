@@ -37,6 +37,8 @@ enrichment_coding_by_age.R
 
 Here the observed number of CNVs that overlaps with exons (and the number of genes affected by exon-overlapping CNVs) is counted in the real CNV maps and in the randomized maps, separating by gene evolutionary ages. Then, the enrichment is calculated using the function in calculate_pvalue_randomizations.R 
 
+calculate_pvalue_randomizations.R 
+Function used to calculate the P-value of the enrichment/depletion. This function is extracted from the function permTest() from R package RegioneR (version 1.6.2)
 
 deletions_introns_genes_ages.RData	
 

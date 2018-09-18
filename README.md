@@ -4,7 +4,7 @@
 
 This repository contains the scripts and data that were used to generate the results presented in Rigau et al. (Intronic CNVs cause gene expression variation in human population, https://doi.org/10.1101/171165). 
 
-We include code to generate different types of randomised sets of CNVs, that will be used in subsequent scripts to assess the relationship between CNVs and different genomic features, focusing on introns. These are the descriptions of the different R scripst and of data files: 
+We include code to generate different types of randomised sets of CNVs, that will be used in subsequent scripts to assess the relationship between CNVs and different genomic features, focusing on introns. These are the descriptions of the different R scripst and data files: 
 
 Random_intervals_global_randomization.R
 
@@ -20,12 +20,12 @@ The random sets are stored as matrices with the start coordinates (chromosomes a
 
 enrichment_general.R
 
-Here the observed number of intronic CNVs is counted for the real CNV maps and for the random maps. Then, the enrichment is calculated using the function in calculate_pvalue_randomizations.R 
+Here the observed number of intronic CNVs is counted in the real CNV maps and in the randomized maps. Then, the enrichment is calculated using the function in calculate_pvalue_randomizations.R 
 
 
 enrichment_by_intron_size_or_age.R	
 
-The number of CNVs overlapping introns is calculated by groups of introns classified by evolutionary ages or by sizes. A P-value is calculate for each subgroup of introns. 
+The number of CNVs overlapping introns is calculated by groups of introns classified by: (1) evolutionary ages or (2 sizes. A P-value is calculate for each subgroup of introns. 
 
 deletions_introns_genes_ages.RData	
 

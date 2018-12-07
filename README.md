@@ -23,3 +23,11 @@ The number of CNVs overlapping introns is calculated by groups of introns classi
 
 deletions_introns_genes_ages.RData	
 RData object containing coordinates of deletions, intronic ranges, exons ranges and gene evolutionary ages, necessary for running all analyses.
+
+
+comparison_intronic_vs_intergenic_regions.R
+
+Script to compare intronic regions with intergenic regions of similar size. It selects a set of 500 introns, finds 500 comparable intergenic regions and then compares the number and size of deletions from the 1000 Genomes Project (Sudmant Nature). RData file data_for_comparison_intron_intergenic.RData contains the necessary objects for running the script. 
+
+
+
